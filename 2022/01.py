@@ -13,9 +13,9 @@ N_ELVES = 3
 
 
 with IN.open() as f:
-    for line in f.readlines():
-        line = line.strip()
-        if line:
+    for raw in f.readlines():
+
+        if line := raw.strip():
             ei += int(line)
 
         else:
