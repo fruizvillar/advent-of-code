@@ -1,40 +1,40 @@
 import abc
-from io import StringIO
 from pathlib import Path
 
 
 class AOCProblem(abc.ABC):
-
     N = None
 
-    def __init__(self, test_input=None):
+    def __init__(self, test=False):
+        self.input_f = (Path('in') / f'{self.N:02d}.txt').resolve()
+        self.input_f_test = self.input_f.with_name(f'{self.N:02d}_test.txt')
+        self.test = test
 
-        self.input_f = Path('in') / f'{self.N:02d}.txt'
+        f_applicable = self.input_f_test if test else self.input_f
 
-        self.test_input = test_input
+        if not f_applicable.exists():
+            f_applicable.touch()
+            print(f'Just created {f_applicable.as_uri()}. Paste your input there!')
+            raise RuntimeError
 
-    def solve1(self, buffer):
+    def load_data(self, f: Path):
         raise NotImplementedError
 
-    def solve2(self, buffer):
+    def solve1(self):
         raise NotImplementedError
 
-    def __call__(self, test=False):
-        test_str = ' (test)' if test else ''
+    def solve2(self):
+        raise NotImplementedError
 
-        buffer_f = StringIO(self.test_input) if test else self.input_f.open()
+    def __call__(self):
+        test_str = ' (test)' if self.test else ''
 
-        with buffer_f as buffer:
-            result = self.solve1(buffer)
+        f = self.input_f_test if self.test else self.input_f
+
+        self.load_data(f)
+
+        result = self.solve1()
         print(f'First star result{test_str}:', result)
 
-        buffer_f = StringIO(self.test_input) if test else self.input_f.open()
-
-        with buffer_f as buffer:
-            result = self.solve2(buffer)
+        result = self.solve2()
         print(f'Second star result{test_str}:', result)
-
-
-
-
-
