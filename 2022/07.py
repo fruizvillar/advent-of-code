@@ -17,4 +17,4 @@ class TodaysProblem(AOCProblem):
 
 
 if __name__ == '__main__':
-    TodaysProblem(test_input=)()
+    TodaysProblem()()

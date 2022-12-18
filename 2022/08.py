@@ -1,4 +1,8 @@
+import math
+from enum import Enum
+from itertools import product, tee
 from pathlib import Path
+from typing import Set, Tuple
 
 from problem import AOCProblem
 
@@ -8,10 +12,14 @@ class TodaysProblem(AOCProblem):
 
     MAX_TREE_H = 9
 
+    class Direction(Enum):
+        H = 'horizontal'
+        V = 'vertical'
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.forest = []
-        self.h = self.w = 0
+        self.dim = 0
         self.visible_trees = set()
 
     def load_data(self, f: Path):
@@ -19,23 +27,15 @@ class TodaysProblem(AOCProblem):
             for line in buffer.readlines():
                 self.forest.append(list(map(int, line.strip())))
 
-        self.h = len(self.forest)
-        self.w = len(self.forest[0])
+        self.dim = len(self.forest)
 
     def solve1(self):
-        edge_trees = 2 * (self.h + self.w - 2)
+        edge_trees = 4 * (self.dim - 1)
 
-        # Up to down
-        visible_trees = self._vertical_sweep()
+        visible_trees = set()
 
-        # Down to up
-        visible_trees |= self._vertical_sweep(revert=True)
-
-        # L to R
-        visible_trees |= self._horizontal_sweep()
-
-        # R to L
-        visible_trees |= self._horizontal_sweep(revert=True)
+        for direction, reverting in product(self.Direction, (False, True)):
+            visible_trees |= self.sweep_forest(direction, reverting)
 
         self.visible_trees = visible_trees
 
@@ -43,68 +43,66 @@ class TodaysProblem(AOCProblem):
 
     def solve2(self):
         max_score = 0
-        for y0, x0 in self.visible_trees:
-            if x0 in (0, self.w - 1) or y0 in (0, self.h - 1):
-                continue
 
-            product = []
-            for dy, dx in (0, 1), (1, 0), (-1, 0), (0, -1):
-                pass
+        for y0, x0 in product(*tee(range(1, self.dim - 1))):
 
-    def _vertical_sweep(self, revert=False):
+            factors = []
+
+            for dy, dx in (-1, 0), (0, -1), (1, 0), (0, 1):
+                y, x = y0, x0
+                n_trees = 0
+                this_tree_h = self.forest[y][x]
+                while x and y:
+                    y, x = y + dy, x + dx
+
+                    try:
+                        next_tree_h = self.forest[y][x]
+                    except IndexError:
+                        break
+
+                    n_trees += 1
+
+                    if next_tree_h >= this_tree_h:
+                        break
+
+                factors.append(n_trees)
+
+            max_score = max(max_score, math.prod(factors))
+
+        return max_score
+
+    def sweep_forest(self, sweep_dir: Direction, revert=False):
         visible_trees = set()
 
-        first_col = (self.h - 1) if revert else 0
+        first_n_along_sweep = (self.dim - 1) if revert else 0
 
-        highest_tree = {row: self.forest[row][first_col] for row in range(1, self.h - 1)}
+        if sweep_dir == self.Direction.V:
+            highest_tree_per_across_line = {i: self.forest[first_n_along_sweep][i] for i in range(1, self.dim - 1)}
+        else:
+            highest_tree_per_across_line = {i: self.forest[i][first_n_along_sweep] for i in range(1, self.dim - 1)}
 
-        range_sweep_col = range(1, self.h - 1)
+        range_sweep = range(1, self.dim - 1)
         if revert:
-            range_sweep_col = reversed(range_sweep_col)
+            range_sweep = reversed(range_sweep)
 
-        for col in range_sweep_col:
-            done_with_row = []
-            for row, highest in highest_tree.items():
+        # n_along is the index along (parallel to) the direction in which we sweep (sweep=H -> n_along=n_row)
+        for n_along in range_sweep:
+            done_with_n_across = []
+            for n_across, highest in highest_tree_per_across_line.items():
+
+                row, col = (n_along, n_across) if sweep_dir == self.Direction.V else (n_across, n_along)
+
                 if (tree_h := self.forest[row][col]) > highest:
-                    highest_tree[row] = tree_h
+                    highest_tree_per_across_line[n_across] = tree_h
                     visible_trees.add((row, col))
 
                 if max(highest, tree_h) == self.MAX_TREE_H:
-                    done_with_row.append(row)
+                    done_with_n_across.append(n_across)
 
-            for row in done_with_row:
-                del highest_tree[row]
+            for n_across in done_with_n_across:
+                del highest_tree_per_across_line[n_across]
 
-            if not highest_tree:
-                break
-
-        return visible_trees
-
-    def _horizontal_sweep(self, revert=False):
-        visible_trees = set()
-
-        first_row = (self.h - 1) if revert else 0
-
-        highest_tree = {i: self.forest[first_row][i] for i in range(1, self.w - 1)}
-
-        range_sweep_row = range(1, self.h - 1)
-        if revert:
-            range_sweep_row = reversed(range_sweep_row)
-
-        for row in range_sweep_row:
-            done_with_col = []
-            for col, highest in highest_tree.items():
-                if (tree_h := self.forest[row][col]) > highest:
-                    highest_tree[col] = tree_h
-                    visible_trees.add((row, col))
-
-                if max(highest, tree_h) == self.MAX_TREE_H:
-                    done_with_col.append(col)
-
-            for col in done_with_col:
-                del highest_tree[col]
-
-            if not highest_tree:
+            if not highest_tree_per_across_line:
                 break
 
         return visible_trees
