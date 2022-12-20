@@ -1,7 +1,6 @@
 import abc
 from pathlib import Path
 
-
 class AOCProblem(abc.ABC):
     N = None
 
@@ -30,6 +29,8 @@ class AOCProblem(abc.ABC):
         test_str = ' (test)' if self.test else ''
 
         f = self.input_f_test if self.test else self.input_f
+
+        print(f'Solving AoC day {self.N}{test_str}. See https://adventofcode.com/2022/day/{self.N}.')
 
         self.load_data(f)
 
