@@ -1,8 +1,30 @@
 import abc
+from enum import Enum
+from typing import Literal
 from pathlib import Path
 
+class Direction2D(Enum):
+    """Indicates any direction in a 2D grid (unitary vector)"""
+    U = (-1, 0)
+    D = (1, 0)
+    L = (0, -1)
+    R = (0, 1)
+
+    @property
+    def y(self) -> Literal[-1, 0, 1]:
+        """ Y coordinate of the direction"""
+        return self.value[0]
+
+    @property
+    def x(self) -> Literal[-1, 0, 1]:
+        """ X coordinate of the direction"""
+        return self.value[1]
+
+
 class AOCProblem(abc.ABC):
-    N = None
+    @property
+    def N(self):
+        raise NotImplementedError
 
     def __init__(self, test=False):
         self.input_f = (Path('in') / f'{self.N:02d}.txt').resolve()
