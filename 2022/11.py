@@ -1,4 +1,6 @@
 from pathlib import Path
+from queue import SimpleQueue
+from typing import List
 
 from problem import AOCProblem
 
@@ -6,20 +8,27 @@ from problem import AOCProblem
 class TodaysProblem(AOCProblem):
     N = 11
 
-    MONKEYS = []
+    N_ROUNDS = 20
 
     class Monkey:
         def __init__(self, n):
             self.n = n
 
-            self.items = []
+            self.items = SimpleQueue()
             self.mod = -1
-            self.operation = None
+            self.equation = None
             self.true_monkey = -1
             self.false_monkey = -1
+            self.n_inspections = 0
+
+        def operation(self, old):
+            self.n_inspections += 1
+            return eval(self.equation)
 
         def __str__(self):
-            return f'{self.n}: {self.items} M=[{self.mod}]; T->{self.true_monkey} F->{self.false_monkey}'
+            return f'{self.n}: Q({str(self.items):20}) [%{self.mod}]; T->{self.true_monkey} F->{self.false_monkey}'
+
+    MONKEYS: List[Monkey] = []
 
     def load_data(self, f: Path):
         n_monkeys = 0
@@ -42,7 +51,8 @@ class TodaysProblem(AOCProblem):
                     continue
 
                 if 'Starting items' in field:
-                    last_monkey.items.extend(list(map(int, value.split(','))))
+                    for item in map(int, value.split(',')):
+                        last_monkey.items.put_nowait(item)
                     continue
 
                 if 'Test' in field:
@@ -50,7 +60,7 @@ class TodaysProblem(AOCProblem):
                     continue
 
                 if 'Operation' in field:
-                    last_monkey.operation = lambda x: eval(f'old={x};{value};print(new)')  # FIXME
+                    last_monkey.equation = value.split('=')[1]
                     continue
 
                 if 'true' in field:
@@ -61,11 +71,35 @@ class TodaysProblem(AOCProblem):
                     continue
 
     def solve1(self):
-
-        print(*self.MONKEYS, sep='\n')
+        return self._solve(div=3, n_rounds=20)
 
     def solve2(self):
-        pass
+        print('Cannot solve with brute-force methods!')
+        return
+        self._solve(div=1, n_rounds=10000)
+
+    def _solve(self, div, n_rounds):
+        for n_round in range(1, n_rounds + 1):
+
+            for monkey in self.MONKEYS:
+
+                while not monkey.items.empty():
+                    item = monkey.items.get_nowait()
+                    worry_level = monkey.operation(item) // div
+
+                    if worry_level % monkey.mod == 0:
+                        passing_to_m = monkey.true_monkey
+                    else:
+                        passing_to_m = monkey.false_monkey
+
+                    self.MONKEYS[passing_to_m].items.put_nowait(worry_level)
+
+            print(f'At the end of round {n_round}:')
+
+            print('N Inspections', *(f'{m.n}: {m.n_inspections}' for m in self.MONKEYS), sep='\n\t')
+
+        inspections = sorted(m.n_inspections for m in self.MONKEYS)
+        return inspections[-1] * inspections[-2]
 
     def __str__(self):
         return '\n'.join(str(m) for m in self.MONKEYS)
