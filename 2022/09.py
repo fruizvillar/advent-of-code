@@ -9,9 +9,16 @@ class TodaysProblem(AOCProblem):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.movements = []
-        self.head = Coordinate2D()
-        self.tail = Coordinate2D()
-        self._tail_histo = {self.tail}
+        self._knots = []
+        self._tail_histo = {Coordinate2D()}
+
+    @property
+    def head(self):
+        return self._knots[0]
+
+    @property
+    def tail(self):
+        return self._knots[-1]
 
     def load_data(self, f: Path):
         with f.open() as buffer:
@@ -20,51 +27,66 @@ class TodaysProblem(AOCProblem):
                 self.movements.append((Direction2D[segments[0]], int(segments[1])))
 
     def solve1(self):
+        return self._solve()
+
+    def solve2(self):
+        return self._solve(n_knots=10)
+
+    def _solve(self, n_knots=2):
+        self._knots = [Coordinate2D()] * n_knots
+        self._tail_histo = {self.tail}
+
         for direction, amount in self.movements:
             for _ in range(amount):
-                self.head += direction
+                self._knots[0] += direction
                 self._make_tail_follow_head()
+
+        self._plot()
 
         return len(self._tail_histo)
 
-
-    def solve2(self):
-        pass
-
     def _make_tail_follow_head(self):
-        if self.head.chess_king_distance(self.tail) <= 1:
-            return
 
-        diff = self.head - self.tail
+        for n in range(1, len(self._knots)):
+            if self._knots[n - 1].chess_king_distance(self._knots[n]) <= 1:
+                return
 
-        diff_1_step = diff.to_king_move()
-        new_tail = self.tail + diff_1_step
+            diff = self._knots[n - 1] - self._knots[n]
 
-        self.tail = new_tail
-        self._tail_histo.add(new_tail)
+            diff_1_step = diff.to_king_move()
+            self._knots[n] += diff_1_step
+
+        self._tail_histo.add(self.tail)
 
     def _plot(self):
-        y0 = min(self.head.y, self.tail.y, 0)
-        yf = max(self.head.y, self.tail.y, 0)
-        x0 = min(self.head.x, self.tail.x, 0)
-        xf = max(self.head.x, self.tail.x, 0)
+        y0 = min(0, *[c.y for c in self._knots], *[c.y for c in self._tail_histo])
+        yf = max(0, *[c.y for c in self._knots], *[c.y for c in self._tail_histo])
+        x0 = min(0, *[c.x for c in self._knots], *[c.x for c in self._tail_histo])
+        xf = max(0, *[c.x for c in self._knots], *[c.x for c in self._tail_histo])
 
-        for y in range(y0, yf+1):
-            for x in range(x0, xf+1):
-                if (y, x) == self.head and self.head == self.tail:
-                    c = 'X'
-                elif (y, x) == self.head:
-                    c = 'H'
-                elif (y, x) == self.tail:
-                    c = 'T'
-                elif not x and not y:
-                    c = 'S'
-                else:
-                    c = '.'
-
+        print('-' * (xf - x0 + 1))
+        for y in range(y0, yf + 1):
+            for x in range(x0, xf + 1):
+                c = self._find_c(y, x)
                 print(c, end='')
 
             print()
+
+    def _find_c(self, y, x):
+        p = Coordinate2D(y, x)
+
+        for i, knot in enumerate(self._knots):
+            if p == knot:
+                if i == 0:
+                    return 'H'
+                return str(i)
+
+        if p in self._tail_histo:
+            return '#'
+
+        if y or x:
+            return '.'
+        return 's'
 
     def __str__(self):
         return '\n'.join((' '.join(str(x) for x in row) for row in self.movements))
