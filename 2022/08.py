@@ -2,9 +2,8 @@ import math
 from enum import Enum
 from itertools import product, tee
 from pathlib import Path
-from typing import Set, Tuple
 
-from problem import AOCProblem
+from lib import AOCProblem
 
 
 class TodaysProblem(AOCProblem):

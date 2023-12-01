@@ -2,7 +2,7 @@ from pathlib import Path
 from queue import SimpleQueue
 from typing import List
 
-from problem import AOCProblem
+from lib import AOCProblem
 
 
 class TodaysProblem(AOCProblem):

@@ -1,6 +1,6 @@
 import heapq
 
-from problem import AOCProblem
+from lib import AOCProblem
 
 
 class Day01(AOCProblem):

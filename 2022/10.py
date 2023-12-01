@@ -1,7 +1,7 @@
 from enum import StrEnum, auto
 from pathlib import Path
 
-from problem import AOCProblem
+from lib import AOCProblem
 
 
 class TodaysProblem(AOCProblem):

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from problem import AOCProblem, Direction2D, Coordinate2D
+from lib import AOCProblem, Direction2D, Coordinate2D
 
 
 class TodaysProblem(AOCProblem):

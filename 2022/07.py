@@ -2,7 +2,7 @@ from pathlib import Path
 from queue import LifoQueue
 from typing import Dict
 
-from problem import AOCProblem
+from lib import AOCProblem
 
 
 class TodaysProblem(AOCProblem):
