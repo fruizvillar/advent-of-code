@@ -5,7 +5,7 @@ from typing import List
 from lib import AOCProblem
 
 
-class TodaysProblem(AOCProblem):
+class Problem(AOCProblem):
     N = 11
 
     N_ROUNDS = 20
@@ -106,4 +106,4 @@ class TodaysProblem(AOCProblem):
 
 
 if __name__ == '__main__':
-    TodaysProblem(test=True)()
+    Problem(test=True)()

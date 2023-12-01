@@ -4,7 +4,7 @@ from pathlib import Path
 from lib import AOCProblem
 
 
-class TodaysProblem(AOCProblem):
+class Problem(AOCProblem):
     N = 10
 
     class Instruction(StrEnum):
@@ -85,4 +85,4 @@ class TodaysProblem(AOCProblem):
 
 
 if __name__ == '__main__':
-    TodaysProblem(test=False)()
+    Problem(test=False)()

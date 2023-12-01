@@ -5,7 +5,7 @@ from typing import Dict
 from lib import AOCProblem
 
 
-class TodaysProblem(AOCProblem):
+class Problem(AOCProblem):
     N = 7
 
     PROMPT = '$'
@@ -16,7 +16,7 @@ class TodaysProblem(AOCProblem):
     TARGET_FREE = 30_000_000
 
     class AocFileItem:
-        def __init__(self, parent: 'TodaysProblem.Dir' = None, name: str = '/'):
+        def __init__(self, parent: 'Problem.Dir' = None, name: str = '/'):
             self.name = name
             if parent is None:
                 self.path = Path('/')
@@ -34,7 +34,7 @@ class TodaysProblem(AOCProblem):
     class Dir(AocFileItem):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
-            self.children = {}  # type: Dict[TodaysProblem.Dir]
+            self.children = {}  # type: Dict[Problem.Dir]
             self.content_size = 0
 
         def __str__(self):
@@ -53,7 +53,7 @@ class TodaysProblem(AOCProblem):
         self.dirs = []
         self.commands = []
         self.root = self.Dir()
-        self.cwd = self.root  # type: TodaysProblem.Dir
+        self.cwd = self.root  # type: Problem.Dir
 
     def load_data(self, f: Path):
         with f.open() as buffer:
@@ -155,4 +155,4 @@ class TodaysProblem(AOCProblem):
 
 
 if __name__ == '__main__':
-    TodaysProblem(test=False)()
+    Problem(test=False)()

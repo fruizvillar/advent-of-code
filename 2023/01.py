@@ -4,7 +4,7 @@ import re
 import lib
 
 
-class TodaysProblem(lib.AOCProblem):
+class Problem(lib.AOCProblem):
     """ https://adventofcode.com/2023/day/1
 
     Solved by matching digits in the string, and then converting them to ints. Mapping is done from digit names to
@@ -78,4 +78,4 @@ class TodaysProblem(lib.AOCProblem):
 
 
 if __name__ == '__main__':
-    TodaysProblem()()
+    Problem()()

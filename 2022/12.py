@@ -4,7 +4,7 @@ from typing import List, Optional
 from lib import AOCProblem, Coordinate2D
 
 
-class TodaysProblem(AOCProblem):
+class Problem(AOCProblem):
     N = 12
 
     C_START = 'S'
@@ -51,4 +51,4 @@ class TodaysProblem(AOCProblem):
 
 
 if __name__ == '__main__':
-    TodaysProblem(test=True)()
+    Problem(test=True)()

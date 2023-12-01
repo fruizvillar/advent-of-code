@@ -6,7 +6,7 @@ from pathlib import Path
 from lib import AOCProblem
 
 
-class TodaysProblem(AOCProblem):
+class Problem(AOCProblem):
     N = 8
 
     MAX_TREE_H = 9
@@ -111,4 +111,4 @@ class TodaysProblem(AOCProblem):
 
 
 if __name__ == '__main__':
-    TodaysProblem(test=False)()
+    Problem(test=False)()

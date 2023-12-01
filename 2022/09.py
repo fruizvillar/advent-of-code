@@ -3,7 +3,7 @@ from pathlib import Path
 from lib import AOCProblem, Direction2D, Coordinate2D
 
 
-class TodaysProblem(AOCProblem):
+class Problem(AOCProblem):
     N = 9
 
     def __init__(self, **kwargs):
@@ -93,4 +93,4 @@ class TodaysProblem(AOCProblem):
 
 
 if __name__ == '__main__':
-    TodaysProblem(test=False)()
+    Problem(test=False)()
