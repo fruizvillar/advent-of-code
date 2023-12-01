@@ -87,18 +87,24 @@ class Coordinate2D:
 
 
 class AOCProblem(abc.ABC):
-    @property
-    def N(self):
-        raise NotImplementedError
 
-    def __init__(self, test=False):
-        self.input_f = (Path('in') / f'{self.N:02d}.txt').resolve()
-        self.input_f_test = self.input_f.with_name(f'{self.N:02d}_test.txt')
+
+    def __init__(self, dunder_file_child, test=False):
+        caller_f = Path(dunder_file_child)
+
+        self.day = int(caller_f.stem)
+        self.year = int(caller_f.parent.name)
+
+        input_f_stem = caller_f.parent.parent / 'in' / f'{self.year:02d}' / f'{self.day:02d}'
+        self.input_f = input_f_stem.with_suffix('.txt')
+        self.input_f_test = input_f_stem.with_suffix('.test.txt')
         self.test = test
 
-        f_applicable = self.input_f_test if test else self.input_f
+        if not (f_applicable := self.input_f_test if test else self.input_f).exists():
+            if not (parent := f_applicable.parent).exists():
+                parent.mkdir(parents=True)
+                print('Just created the input folder:', parent.as_uri())
 
-        if not f_applicable.exists():
             f_applicable.touch()
             print(f'Just created {f_applicable.as_uri()}. Paste your input there!')
             raise RuntimeError
@@ -117,7 +123,7 @@ class AOCProblem(abc.ABC):
 
         f = self.input_f_test if self.test else self.input_f
 
-        print(f'Solving AoC day {self.N}{test_str}. See https://adventofcode.com/2022/day/{self.N}.')
+        print(f'Solving AoC day {self.day}{test_str}. See https://adventofcode.com/{self.year}/day/{self.day}.')
 
         self.load_data(f)
 
