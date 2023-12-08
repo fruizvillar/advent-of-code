@@ -1,7 +1,38 @@
 import abc
+import dataclasses
 from enum import Enum
 from pathlib import Path
 from typing import Literal
+
+
+@dataclasses.dataclass
+class Range:
+    start: int
+    length: int
+
+    @property
+    def end(self):
+        return self.start + self.length - 1
+
+    def __contains__(self, item):
+        return self.start <= item <= self.end
+
+    def __post_init__(self):
+        if self.length < 1:
+            raise RuntimeError('Range length must be positive')
+
+    def overlapping(self, other: 'Range'):
+
+        if other.start in self:
+            first_range = self
+            second_range = other
+        elif self.start in other:
+            first_range = other
+            second_range = self
+        else:
+            return None
+
+        return Range(second_range.start, min(first_range.end, second_range.end) - second_range.start + 1)
 
 
 class Direction2D(Enum):
