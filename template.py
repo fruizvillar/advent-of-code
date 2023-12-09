@@ -2,10 +2,10 @@ import lib
 
 
 class Problem(lib.AOCProblem):
-    """YYYY-12-DD puzzle https://adventofcode.com/YYYY/day/D"""
+    """<YYYY>-12-<DD> puzzle https://adventofcode.com/<YYYY>/day/<D>"""
 
-    def __init__(self, test=False):
-        super().__init__(dunder_file_child=__file__, test=test)
+    def __init__(self, test=False, verbose=False):
+        super().__init__(dunder_file_child=__file__, test=test, verbose=verbose)
 
     def load_data(self, f):
         with f.open() as f_in:
@@ -19,4 +19,4 @@ class Problem(lib.AOCProblem):
 
 
 if __name__ == '__main__':
-    Problem(test=True)()
+    Problem(test=True, verbose=True)()
