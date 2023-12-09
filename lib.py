@@ -1,5 +1,6 @@
 import abc
 import dataclasses
+import logging
 from enum import Enum
 from pathlib import Path
 from typing import Literal
@@ -119,8 +120,7 @@ class Coordinate2D:
 
 class AOCProblem(abc.ABC):
 
-
-    def __init__(self, dunder_file_child, test=False):
+    def __init__(self, dunder_file_child, test=False, verbose=False):
         caller_f = Path(dunder_file_child)
 
         self.day = int(caller_f.stem)
@@ -138,7 +138,11 @@ class AOCProblem(abc.ABC):
 
             f_applicable.touch()
             print(f'Just created {f_applicable.as_uri()}. Paste your input there!')
-            raise RuntimeError
+            raise SystemExit(1)
+
+        logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO,
+                            format='%(asctime)s %(levelname)s %(message)s', datefmt='%H:%M:%S')
+        self.logger = logging.getLogger(f'advent-of-code_{self.year}-{self.day:02d}')
 
     def load_data(self, f: Path):
         raise NotImplementedError
