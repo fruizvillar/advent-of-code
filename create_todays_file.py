@@ -1,6 +1,5 @@
 """ Uses template.py to create a new file for today's date. """
 
-
 import datetime
 
 from pathlib import Path
@@ -10,7 +9,9 @@ def main():
     today = datetime.date.today()
     today_str = today.strftime('%Y/%d')
 
-    new_file = Path(__file__).parent / f'{today_str}.py'
+    if (new_file := Path(__file__).parent / f'{today_str}.py').exists():
+        print(f'Target file already exists: {new_file.as_uri()}')
+        return
 
     template = Path(__file__).parent / 'template.py'
 
@@ -30,3 +31,7 @@ def main():
         f.write(new_contents)
 
     print(f'Created {new_file.as_uri()}')
+
+
+if __name__ == '__main__':
+    main()
