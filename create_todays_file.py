@@ -5,9 +5,9 @@ import datetime
 from pathlib import Path
 
 
-def main():
-    today = datetime.date.today()
-    today_str = today.strftime('%Y/%d')
+def main(date=None):
+    date = date or datetime.date.today()
+    today_str = date.strftime('%Y/%d')
 
     if (new_file := Path(__file__).parent / f'{today_str}.py').exists():
         print(f'Target file already exists: {new_file.as_uri()}')
@@ -19,9 +19,9 @@ def main():
         template_contents = f.read()
 
     new_contents = (template_contents
-                    .replace('<YYYY>', str(today.year))
-                    .replace('<D>', str(today.day))
-                    .replace('<DD>', str(today.day).zfill(2)))
+                    .replace('<YYYY>', str(date.year))
+                    .replace('<D>', str(date.day))
+                    .replace('<DD>', str(date.day).zfill(2)))
 
     if not new_file.parent.exists():
         new_file.parent.mkdir(parents=True)

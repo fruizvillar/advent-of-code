@@ -43,6 +43,8 @@ class _Base2D:
         if x is None:
             if isinstance(y, tuple):
                 self._tuple = y
+            elif isinstance(y, _Base2D):
+                self._tuple = y.as_tuple()
             else:
                 raise ValueError(f'What is {y=}?')
         else:
@@ -117,21 +119,33 @@ class Position2D(_Base2D):
 
         return max(abs(diff.y), abs(diff.x))  # Diagonal moves would make the lower component irrelevant
 
+    def manhattan_distance(self, other):
+        other = _Base2D(other)
+        diff = self - other
+
+        return abs(diff.y) + abs(diff.x)
+
     def to_king_move(self) -> '_Base2D':
 
         return _Base2D(*[c // abs(c) if c else 0 for c in self._tuple])
 
     def __add__(self, other) -> '_Base2D':
         if isinstance(other, _Base2D):
-            return _Base2D(self.y + other.y, self.x + other.x)
+            return self.__class__(self.y + other.y, self.x + other.x)
 
         if isinstance(other, tuple) and len(other) == 2:
-            return _Base2D(self.y + other[0], self.x + other[1])
+            return self.__class__(self.y + other[0], self.x + other[1])
 
         raise NotImplementedError
 
     def __sub__(self, other) -> '_Base2D':
         return self.__add__(other.__neg__())
+
+    def __str__(self):
+        return f'P({self.y: d}, {self.x: d})'
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}({self.y}, {self.x})'
 
 
 class _BaseEnum2D(_Base2D, tuple, enum.Enum):
@@ -167,7 +181,7 @@ class Direction2D(_BaseEnum2D):
     U = (-1, +0)
     D = (+1, +0)
     L = (+0, -1)
-    R = (+0, -1)
+    R = (+0, +1)
 
 
 class DirectionDiagonals2D(_BaseEnum2D):

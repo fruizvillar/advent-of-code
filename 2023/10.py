@@ -283,4 +283,4 @@ class Problem(lib.AOCProblem):
 
 
 if __name__ == '__main__':
-    Problem(test=True, verbose=True)()
+    Problem(test=False, verbose=True)()
