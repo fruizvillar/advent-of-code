@@ -1,9 +1,10 @@
 import abc
 import dataclasses
+import enum
 import logging
-from enum import Enum
+import math
+import typing
 from pathlib import Path
-from typing import Literal
 
 
 @dataclasses.dataclass
@@ -36,86 +37,145 @@ class Range:
         return Range(second_range.start, min(first_range.end, second_range.end) - second_range.start + 1)
 
 
-class Direction2D(Enum):
-    """Indicates any direction in a 2D grid (unitary vector)"""
-    U = (-1, 0)
-    D = (1, 0)
-    L = (0, -1)
-    R = (0, 1)
+class _Base2D:
+
+    def __init__(self, y, x=None):
+        if x is None:
+            if isinstance(y, tuple):
+                self._tuple = y
+            else:
+                raise ValueError(f'What is {y=}?')
+        else:
+            self._tuple = (y, x)
 
     @property
-    def y(self) -> Literal[-1, 0, 1]:
-        """ Y coordinate of the direction"""
-        return self.value[0]
+    def y(self):
+        return self._tuple[0]
 
     @property
-    def x(self) -> Literal[-1, 0, 1]:
-        """ X coordinate of the direction"""
-        return self.value[1]
+    def x(self):
+        return self._tuple[1]
 
-
-class Coordinate2D:
-
-    def __init__(self, y=0, x=0):
-
-        if isinstance(y, (Coordinate2D, Direction2D)):
-            self.y = y.y
-            self.x = y.x
-            return
-
-        if isinstance(y, tuple):
-            self.y, self.x = y
-            return
-
-        self.y = y
-        self.x = x
-
-    @property
     def as_tuple(self) -> tuple:
-        return self.y, self.x
+        return self._tuple
 
-    def __add__(self, other) -> 'Coordinate2D':
-        if isinstance(other, (Coordinate2D, Direction2D)):
-            return Coordinate2D(self.y + other.y, self.x + other.x)
-
-        if isinstance(other, tuple) and len(other) == 2:
-            return Coordinate2D(self.y + other[0], self.x + other[1])
-
-        raise NotImplementedError
-
-    def __neg__(self) -> 'Coordinate2D':
-        return Coordinate2D(-self.y, -self.x)
-
-    def __sub__(self, other) -> 'Coordinate2D':
-        return self.__add__(other.__neg__())
+    def __neg__(self) -> '_Base2D':
+        return self.__class__((-self.y, -self.x))
 
     def __eq__(self, other):
-        if isinstance(other, Coordinate2D):
-            return self.x == other.x and self.y == other.y
-        if isinstance(other, tuple):
-            return self.as_tuple == other
+        if isinstance(other, _Base2D):
+            other = other.as_tuple()
+        elif hasattr(other, 'pos'):
+            other = other.pos.as_tuple()
+        if not isinstance(other, tuple):
+            raise NotImplementedError
+
+        return self._tuple == other
 
     def __str__(self):
         return f'({self.y: d}, {self.x: d})'
 
-    def chess_king_distance(self, other):
-        other = Coordinate2D(other)
-
-        abs_y = abs(self.y - other.y)
-        abs_x = abs(self.x - other.x)
-
-        return max(abs_y, abs_x)  # Diagonal moves would make the lower component irrelevant
-
-    def to_king_move(self) -> 'Coordinate2D':
-        mod_y = self.y // abs(self.y) if self.y else 0
-        mod_x = self.x // abs(self.x) if self.x else 0
-        return Coordinate2D(mod_y, mod_x)
-
     def __hash__(self):
-        return self.as_tuple.__hash__()
+        return self._tuple.__hash__()
 
     def __lt__(self, other):
-        return self.as_tuple.__lt__(other.as_tuple)
+        return self._tuple.__lt__(other.as_tuple())
+
+
+class Position2D(_Base2D):
+
+    def iter_direction_neighbours(self, include_diagonals=False, filter_out_of_bounds=False, use_coordinates=False):
+        min_y = min_x = - math.inf
+        max_y = max_x = math.inf
+
+        if filter_out_of_bounds:
+            min_y = min_x = 0
+            if isinstance(filter_out_of_bounds, bool):
+                pass  # otherwise it matches int!
+            elif isinstance(filter_out_of_bounds, int):
+                max_y = filter_out_of_bounds - 1
+                max_x = filter_out_of_bounds -1
+            elif isinstance(filter_out_of_bounds, tuple) and len(filter_out_of_bounds) == 2:
+                max_y, max_x = [c - 1 for c in filter_out_of_bounds]
+
+        neighbours_direction = list(Coordinate) if use_coordinates else list(Direction2D)
+        if include_diagonals:
+            neighbours_direction.extend(CoordinateDiagonals if use_coordinates else DirectionDiagonals2D)
+
+        for direction in neighbours_direction:
+            new_coord = self + direction
+            if not (min_y <= new_coord.y <= max_y):
+                continue
+            if not (min_x <= new_coord.x <= max_x):
+                continue
+
+            yield direction, new_coord
+
+    def chess_king_distance(self, other):
+        other = _Base2D(other)
+        diff = self - other
+
+        return max(abs(diff.y), abs(diff.x))  # Diagonal moves would make the lower component irrelevant
+
+    def to_king_move(self) -> '_Base2D':
+
+        return _Base2D(*[c // abs(c) if c else 0 for c in self._tuple])
+
+    def __add__(self, other) -> '_Base2D':
+        if isinstance(other, _Base2D):
+            return _Base2D(self.y + other.y, self.x + other.x)
+
+        if isinstance(other, tuple) and len(other) == 2:
+            return _Base2D(self.y + other[0], self.x + other[1])
+
+        raise NotImplementedError
+
+    def __sub__(self, other) -> '_Base2D':
+        return self.__add__(other.__neg__())
+
+
+class _BaseEnum2D(_Base2D, tuple, enum.Enum):
+    def __init__(self, y, x=None):
+        super().__init__(y, x)
+        if isinstance(y, tuple):
+            self._tuple = y
+        else:
+            self._tuple = (y, x)
+
+
+class Coordinate2D(_BaseEnum2D):
+    """Indicates any direction in a 2D grid (unitary vector). Format N-S-W-E"""
+    N = (-1, +0)
+    S = (+1, +0)
+    W = (+0, -1)
+    E = (+0, +1)
+
+
+Coordinate = Coordinate2D
+
+
+class CoordinateDiagonals(_BaseEnum2D):
+    """Indicates any coordinates in a 2D grid (unitary vector)"""
+    NW = (-1, -1)
+    NE = (-1, +1)
+    SW = (+1, -1)
+    SE = (+1, +1)
+
+
+class Direction2D(_BaseEnum2D):
+    """Indicates any direction in a 2D grid (unitary vector). Format U-D-L-R"""
+    U = (-1, +0)
+    D = (+1, +0)
+    L = (+0, -1)
+    R = (+0, -1)
+
+
+class DirectionDiagonals2D(_BaseEnum2D):
+    """Indicates any direction in a 2D grid (unitary vector)"""
+    UL = (-1, -1)
+    UR = (-1, -1)
+    DL = (+1, -1)
+    DR = (+1, -1)
 
 
 class AOCProblem(abc.ABC):
