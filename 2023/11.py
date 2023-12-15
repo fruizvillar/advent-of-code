@@ -11,14 +11,13 @@ class Problem(lib.AOCProblem):
         VACUUM = '.'
         GALAXY = '#'
 
-
     def __init__(self, test=False, verbose=False):
         super().__init__(dunder_file_child=__file__, test=test, verbose=verbose)
 
-        self.universe = []
         self.galaxies = set()
         self.empty_rows = []
         self.empty_cols = []
+        self.expansions = []
 
     def load_data(self, f):
 
@@ -37,21 +36,25 @@ class Problem(lib.AOCProblem):
 
         self.empty_cols = [c for c in range(max(occupied_cols)) if c not in occupied_cols]
 
-
-
     def solve1(self):
+        return self._solve()
+
+    def solve2(self):
+        return self._solve(factor=1_000_000)
+
+    def _solve(self, factor=1):
         shortest_paths_sum = 0
         for g1, g2 in itertools.combinations(sorted(self.galaxies), 2):
             d = g1.manhattan_distance(g2)
 
-            d += self._expansion_between(g1, g2)
-            shortest_paths_sum += d
-            self.logger.debug('Distance %s <-> %s = %d.', g1, g2, d)
+            expansion_effect = self._expansion_between(g1, g2, factor)
+            self.expansions.append((g1, g2, factor, expansion_effect))
+            shortest_paths_sum += d + expansion_effect
+            self.logger.debug('Distance %s <-> %s = %d. (exp=%d)', g1, g2, d, expansion_effect)
 
         return shortest_paths_sum
 
-
-    def _expansion_between(self, g1, g2):
+    def _expansion_between(self, g1, g2, expansion_factor=2):
         exp_y = exp_x = 0
 
         if g1.y != g2.y:
@@ -64,11 +67,8 @@ class Problem(lib.AOCProblem):
             max_g_x = max(g1.x, g2.x)
             exp_x = sum(1 for x in range(min_g_x + 1, max_g_x) if x in self.empty_cols)
 
-        return exp_y + exp_x
-
-    def solve2(self):
-        pass
+        return (expansion_factor - 1) * (exp_y + exp_x)
 
 
 if __name__ == '__main__':
-    Problem(test=False, verbose=True)()
+    Problem(test=False)()
