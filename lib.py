@@ -2,6 +2,8 @@ import abc
 import dataclasses
 import enum
 import logging
+import time
+
 import math
 import typing
 from pathlib import Path
@@ -234,10 +236,15 @@ class AOCProblem(abc.ABC):
 
         print(f'Solving AoC day {self.day}{test_str}. See https://adventofcode.com/{self.year}/day/{self.day}.')
 
+        time_start = time.perf_counter()
         self.load_data(f)
+        time_end = time.perf_counter()
+        print(f'Loaded data. Time elapsed: {time_end - time_start:.3f}')
 
+        time_start = time.perf_counter()
         result = self.solve1()
-        print(f'First star result{test_str}:', result)
+        time_end = time.perf_counter()
+        print(f'First star result{test_str}: {result}. Time elapsed: {time_end - time_start:.3f}')
 
         result = self.solve2()
-        print(f'Second star result{test_str}:', result)
+        print(f'Second star result{test_str}: {result}. Time elapsed: {time_end - time_start:.3f}', )

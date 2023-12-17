@@ -71,4 +71,4 @@ class Problem(lib.AOCProblem):
 
 
 if __name__ == '__main__':
-    Problem(test=False)()
+    Problem()()
