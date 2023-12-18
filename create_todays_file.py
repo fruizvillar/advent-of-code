@@ -5,8 +5,20 @@ import datetime
 from pathlib import Path
 
 
-def main(date=None):
-    date = date or datetime.date.today()
+def main(day=None, *, year=None, date=None):
+    if day and year and date:
+        raise RuntimeError('Cannot specify all 3 params, choose either day+year or date!')
+
+    now = datetime.datetime.now()
+    if day and year:
+        date = datetime.date(year, 12, day)
+    elif day:
+        date = datetime.date(now.year, 12, day)
+    elif year:
+        raise RuntimeError('It is ambiguous if you do not specify the date!')
+
+    date = date or datetime.date.today()  # Otherwise today
+
     today_str = date.strftime('%Y/%d')
 
     if (new_file := Path(__file__).parent / f'{today_str}.py').exists():

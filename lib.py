@@ -98,7 +98,7 @@ class Position2D(_Base2D):
                 pass  # otherwise it matches int!
             elif isinstance(filter_out_of_bounds, int):
                 max_y = filter_out_of_bounds - 1
-                max_x = filter_out_of_bounds -1
+                max_x = filter_out_of_bounds - 1
             elif isinstance(filter_out_of_bounds, tuple) and len(filter_out_of_bounds) == 2:
                 max_y, max_x = [c - 1 for c in filter_out_of_bounds]
 
@@ -248,3 +248,67 @@ class AOCProblem(abc.ABC):
 
         result = self.solve2()
         print(f'Second star result{test_str}: {result}. Time elapsed: {time_end - time_start:.3f}', )
+
+
+class AOCGrid:
+    class Axis(enum.Enum):
+        ROW = 0
+        COL = 1
+
+    def __init__(self, types, rows=None):
+        self._types = types
+        if rows:
+            self.load_list(rows)
+        else:
+            self.rows = []
+
+    def load_f(self, f):
+        with f.open() as f_in:
+            rows = f_in.readlines()
+        self.load_list(rows)
+
+    def load_list(self, rows):
+        if isinstance(rows[0], str):
+
+            self.rows = [[self._types(s) for s in row.strip()] for row in rows]
+
+        elif isinstance(rows[0], list):
+            self.rows = rows.copy()
+
+    @property
+    def height(self):
+        return len(self.rows)
+
+    @property
+    def width(self):
+        return len(self.rows[0])
+
+    @property
+    def cols(self):
+        all_calls = []
+        for c in range(self.width):
+            all_calls.append(tuple([self[(r, c)] for r in range(self.height)]))
+
+        return all_calls
+
+    def __getitem__(self, item):
+        if isinstance(item, tuple):
+            return self.rows[item[0]][item[1]]
+        return tuple(self.rows[item])
+
+    def __setitem__(self, key, value):
+        if isinstance(key, tuple):
+            self.rows[key[0]][key[1]] = value
+        else:
+            self.rows[key] = value
+
+    def __copy__(self):
+        instance = self.__class__(self._types)
+        instance.load_list([row.copy() for row in self.rows])
+        return instance
+
+    def copy(self):
+        return self.__copy__()
+
+    def __str__(self):
+        return '|'.join([''.join([str(c) for c in row]) for row in self.rows])
