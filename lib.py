@@ -3,10 +3,10 @@ import dataclasses
 import enum
 import logging
 import time
-
 import math
-import typing
-from pathlib import Path
+import pathlib
+
+from typing import Any, Generator
 
 
 @dataclasses.dataclass
@@ -197,7 +197,7 @@ class DirectionDiagonals2D(_BaseEnum2D):
 class AOCProblem(abc.ABC):
 
     def __init__(self, dunder_file_child, test=False, verbose=False):
-        caller_f = Path(dunder_file_child)
+        caller_f = pathlib.Path(dunder_file_child)
 
         self.day = int(caller_f.stem)
         self.year = int(caller_f.parent.name)
@@ -220,7 +220,7 @@ class AOCProblem(abc.ABC):
                             format='%(asctime)s %(levelname)s %(message)s', datefmt='%H:%M:%S')
         self.logger = logging.getLogger(f'advent-of-code_{self.year}-{self.day:02d}')
 
-    def load_data(self, f: Path):
+    def load_data(self, f: pathlib.Path):
         raise NotImplementedError
 
     def solve1(self):
@@ -291,13 +291,44 @@ class AOCGrid:
 
         return all_calls
 
+    def iter_with_pos(self, axis: Axis = Axis.ROW, reverse=False) -> Generator[Position2D, Any, Any]:
+        if axis == self.Axis.ROW:
+            val_1_name = 'y'
+            val_2_name = 'x'
+
+            if reverse:
+                iterator = reversed(list(enumerate(self.rows)))
+            else:
+                iterator = enumerate(self.rows)
+
+        elif axis == self.Axis.COL:
+            val_1_name = 'x'
+            val_2_name = 'y'
+
+            if reverse:
+                iterator = reversed(list(enumerate(self.cols)))
+            else:
+                iterator = enumerate(self.cols)
+
+        else:
+            raise NotImplementedError
+
+        for val_1, val_2_group in iterator:
+            for val_2, item in enumerate(val_2_group):
+                pos = Position2D(**dict({val_1_name: val_1, val_2_name: val_2}))
+                yield pos, item
+
     def __getitem__(self, item):
+        if isinstance(item, Position2D):
+            return self.rows[item.y][item.x]
         if isinstance(item, tuple):
             return self.rows[item[0]][item[1]]
         return tuple(self.rows[item])
 
     def __setitem__(self, key, value):
-        if isinstance(key, tuple):
+        if isinstance(key, Position2D):
+            self.rows[key.y][key.x] = value
+        elif isinstance(key, tuple):
             self.rows[key[0]][key[1]] = value
         else:
             self.rows[key] = value
@@ -312,3 +343,17 @@ class AOCGrid:
 
     def __str__(self):
         return '|'.join([''.join([str(c) for c in row]) for row in self.rows])
+
+    def print(self):
+        print('-' * self.width)
+        print(str(self).replace('|', '\n'))
+        print('-' * self.width)
+        print()
+
+    def pos_is_oob(self, pos: Position2D) -> bool:
+        """ Whether a pos is out of bounds"""
+        if pos.y < 0 or pos.y >= self.height:
+            return True
+        if pos.x < 0 or pos.x >= self.width:
+            return True
+        return False
