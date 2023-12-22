@@ -239,15 +239,17 @@ class AOCProblem(abc.ABC):
         time_start = time.perf_counter()
         self.load_data(f)
         time_end = time.perf_counter()
-        print(f'Loaded data. Time elapsed: {time_end - time_start:.3f}')
+        print(f'Loaded data. Time elapsed: {time_end - time_start:.3f} s')
 
         time_start = time.perf_counter()
         result = self.solve1()
         time_end = time.perf_counter()
-        print(f'First star result{test_str}: {result}. Time elapsed: {time_end - time_start:.3f}')
+        print(f'First star result{test_str}: {result}. Time elapsed: {time_end - time_start:.3f} s')
 
+        time_start = time.perf_counter()
         result = self.solve2()
-        print(f'Second star result{test_str}: {result}. Time elapsed: {time_end - time_start:.3f}', )
+        time_end = time.perf_counter()
+        print(f'Second star result{test_str}: {result}. Time elapsed: {time_end - time_start:.3f} s', )
 
 
 class AOCGrid:
