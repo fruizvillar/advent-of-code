@@ -257,10 +257,20 @@ class AOCGrid:
 
     def __init__(self, types, rows=None):
         self._types = types
+
+        self._splitter = self._find_splitter(types)
+
         if rows:
             self.load_list(rows)
         else:
             self.rows = []
+
+    def _find_splitter(self, types):
+        for splitter in '|$!+':
+            try:
+                types(splitter)
+            except ValueError:
+                return splitter
 
     def load_f(self, f):
         with f.open() as f_in:
@@ -342,11 +352,11 @@ class AOCGrid:
         return self.__copy__()
 
     def __str__(self):
-        return '|'.join([''.join([str(c) for c in row]) for row in self.rows])
+        return self._splitter.join([''.join([str(c) for c in row]) for row in self.rows])
 
     def print(self):
         print('-' * self.width)
-        print(str(self).replace('|', '\n'))
+        print(str(self).replace(self._splitter, '\n'))
         print('-' * self.width)
         print()
 
